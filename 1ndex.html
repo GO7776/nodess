@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Курс Node.js + PostgreSQL на VPS через Docker</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #667eea;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            font-size: 1.2em;
+            margin-bottom: 40px;
+        }
+        
+        .phase {
+            margin-bottom: 40px;
+            border-left: 5px solid #667eea;
+            padding-left: 20px;
+        }
+        
+        .phase-title {
+            font-size: 1.8em;
+            color: #667eea;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .phase-number {
+            background: #667eea;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-weight: bold;
+        }
+        
+        .step {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-left: 4px solid #764ba2;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .step:hover {
+            transform: translateX(10px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .step-title {
+            font-size: 1.3em;
+            color: #333;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        
+        .step-description {
+            color: #555;
+            margin-bottom: 15px;
+        }
+        
+        pre {
+            background: #2d3748;
+            color: #68d391;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 10px 0;
+            font-size: 0.9em;
+            border-left: 4px solid #68d391;
+        }
+        
+        code {
+            font-family: 'Courier New', monospace;
+            background: #edf2f7;
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: #e53e3e;
+            font-size: 0.9em;
+        }
+        
+        .warning {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+        
+        .info {
+            background: #d1ecf1;
+            border-left: 4px solid #17a2b8;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+        
+        .success {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+        
+        .file-structure {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            margin: 15px 0;
+        }
+        
+        .tag {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            margin-right: 10px;
+            margin-bottom: 5px;
+        }
+        
+        .checklist {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .checklist li {
+            padding: 10px;
+            margin-bottom: 8px;
+            background: white;
+            border-radius: 5px;
+            border-left: 3px solid #28a745;
+        }
+        
+        .checklist li:before {
+            content: "✓ ";
+            color: #28a745;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 ПОЛНЫЙ КУРС: ДЕПЛОЙ НА VPS BEGET</h1>
+        <div class="subtitle">Node.js + PostgreSQL + Docker + Termius</div>
+        
+        <!-- ФАЗА 0: ПОДГОТОВКА -->
+        <div class="phase">
+            <div class="phase-title">
+                <div class="phase-number">0</div>
+                ПОДГОТОВКА ОКРУЖЕНИЯ
+            </div>
+            
+            <div class="step">
+                <div class="step-title">📥 Установка необходимого ПО</div>
+                <div class="step-description">Установите все необходимые инструменты на локальную машину</div>
+                
+                <div class="tag">Windows</div>
+                <div class="tag">Mac</div>
+                <div class="tag">Linux</div>
+                
+                <ul class="checklist">
+                    <li>Node.js (v18+) - https://nodejs.org</li>
+                    <li>Termius - https://termius.com</li>
+                    <li>Git - https://git-scm.com</li>
+                    <li>Visual Studio Code - https://code.visualstudio.com</li>
+                    <li>Docker Desktop (для локального тестирования) - https://docker.com</li>
+                </ul>
+            </div>
+            
+            <div class="step">
+                <div class="step-title">🏢 Настройка VPS на Beget</div>
+                <div class="step-description">Заказ и первичная настройка виртуального сервера</div>
+                
+                <div class="info">
+                    <strong>Шаги в панели Beget:</strong><br>
+                    1. Войдите в личный кабинет Beget<br>
+                    2. Раздел "VPS/VDS" → "Заказать сервер"<br>
+                    3. Выберите тариф (минимум: 2GB RAM, 2 CPU)<br>
+                    4. ОС: Ubuntu 22.04 LTS<br>
+                    5. Получите данные для подключения на email
+                </div>
+                
+                <div class="warning">
+                    <strong>⚠️ Сохраните данные:</strong><br>
+                    • IP-адрес сервера<br>
+                    • Логин (обычно root)<br>
+                    • Пароль<br>
+                    • SSH порт (обычно 22)
+                </div>
+            </div>
+        </div>
+        
+        <!-- ФАЗА 1: ПОДКЛЮЧЕНИЕ К СЕРВЕРУ -->
+        <div class="phase">
+            <div class="phase-title">
+                <div class="phase-number">1</div>
+                ПОДКЛЮЧЕНИЕ К СЕРВЕРУ ЧЕРЕЗ TERMIUS
+            </div>
+            
+            <div class="step">
+                <div class="step-title">🔐 Настройка подключения в Termius</div>
+                <div class="step-description">Создание SSH-подключения к вашему VPS</div>
+                
+                <div class="info">
+                    <strong>В приложении Termius:</strong><br>
+                    1. Откройте Termius<br>
+                    2. Нажмите "New Host"<br>
+                    3. Введите данные:<br>
+                    • Alias: Beget VPS<br>
+                    • Address: ваш IP<br>
+                    • Port: 22<br>
+                    • Username: root<br>
+                    • Password: ваш пароль<br>
+                    4. Сохраните и подключитесь
+                </div>
+                
+                <pre># После подключения проверьте систему:
+uname -a
+cat /etc/os-release</pre>
+            </div>
+            
+            <div class="step">
+                <div class="step-title">🔒 Настройка SSH-ключей (рекомендуется)</div>
+                <div class="step-description">Более безопасный способ подключения</div>
+                
+                <pre># На локальной машине (Windows PowerShell, Mac/Linux Terminal):
+ssh-keygen -t rsa -b 4096 -C "your_email@example.com"
+
+# Скопируйте публичный ключ на сервер:
+ssh-copy-id root@ваш_ip
+
+# Или вручную через Termius:
+# 1. Termius → Keychain → New Key
+# 2. Generate new key
+# 3. В Hosts → Edit → Keys → выберите созданный ключ</pre>
+            </div>
+        </div>
+        
+        <!-- ФАЗА 2: НАСТРОЙКА СЕРВЕРА -->
+        <div class="phase">
+            <div class="phase-title">
+                <div class="phase-number">2</div>
+                БАЗОВАЯ НАСТРОЙКА СЕРВЕРА
+            </div>
+            
+            <div class="step">
+                <div class="step-title">📦 Обновление системы</div>
+                <div class="step-description">Установка обновлений и необходимых пакетов</div>
+                
+                <pre># Обновляем систему:
+apt update && apt upgrade -y
+
+# Устанавливаем базовые инструменты:
+apt install -y curl wget git vim ufw htop</pre>
+            </div>
+            
+            <div class="step">
+                <div class="step-title">🔥 Настройка файрвола UFW</div>
+                <div class="step-description">Защита сервера от несанкционированного доступа</div>
+                
+                <pre># Настраиваем файрвол:
+ufw default deny incoming
+ufw default allow outgoing
+ufw allow 22/tcp      # SSH
+ufw allow 80/tcp      # HTTP
+ufw allow 443/tcp     # HTTPS
+
+# Включаем файрвол:
+ufw enable
+
+# Проверяем статус:
+ufw status</pre>
+                
+                <div class="warning">
+                    <strong>⚠️ ВАЖНО:</strong> Убедитесь, что порт 22 (SSH) разрешен, иначе потеряете доступ к серверу!
+                </div>
+            </div>
+            
+            <div class="step">
+                <div class="step-title">👤 Создание пользователя (опционально)</div>
+                <div class="step-description">Создание отдельного пользователя для работы (вместо root)</div>
+                
+                <pre># Создаем пользователя:
+adduser deploy
+
+# Добавляем в группу sudo:
+usermod -aG sudo deploy
+
+# Копируем SSH ключи (если используете):
+rsync --archive --chown=deploy:deploy ~/.ssh /home/deploy/
+
+# Переключаемся на нового пользователя:
+su - deploy</pre>
+            </div>
+        </div>
+        
+        <!-- ФАЗА 3: УСТАНОВКА DOCKER -->
+        <div class="phase">
+            <div class="phase-title">
+                <div class="phase-number">3</div>
+                УСТАНОВКА DOCKER И DOCKER COMPOSE
+            </div>
+            
+            <div class="step">
+                <div class="step-title">🐳 Установка Docker</div>
+                <div class="step-description">Установка Docker Engine на Ubuntu</div>
+                
+                <pre># Удаляем старые версии (если есть):
+apt remove docker docker-engine docker.io containerd runc
+
+# Устанавливаем зависимости:
+apt install -y \
+    ca-certificates \
+    curl \
+    gnupg \
+    lsb-release
+
+# Добавляем официальный GPG ключ Docker:
+mkdir -p /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+
+# Добавляем репозиторий Docker:
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+  $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+# Устанавливаем Docker:
+apt update
+apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+# Проверяем установку:
+docker --version
+docker compose version</pre>
+            </div>
+            
+            <div class="step">
+                <div class="step-title">⚙️ Настройка Docker</div>
+                <div class="step-description">Настройка прав доступа и автозапуска</div>
+                
+                <pre># Добавляем пользователя в группу docker (если не root):
+usermod -aG docker $USER
+newgrp docker
+
+# Включаем автозапуск Docker:
+systemctl enable docker
+systemctl start docker
+
+# Проверяем работу:
+docker run hello-world</pre>
+                
+                <div class="success">
+                    <strong>✅ Docker установлен!</strong> Если увидели сообщение от hello-world, всё работает корректно.
+                </div>
+            </div>
+        </div>
+        
+        <!-- ФАЗА 4: ПОДГОТОВКА ПРОЕКТА -->
+        <div class="phase">
+            <div class="phase-title">
+                <div class="phase-number">4</div>
+                СОЗДАНИЕ И НАСТРОЙКА ПРОЕКТА
+            </div>
+            
+            <div class="step">
+                <div class="step-title">📁 Структура проекта</div>
+                <div class="step-description">Создаем правильную структуру приложения</div>
+                
+                <pre># На сервере создаем директорию:
+mkdir -p /var/www/myapp
+cd /var/www/myapp</pre>
+                
+                <div class="file-structure">
+myapp/
+├── docker-compose.yml
+├── .env
+├── nginx/
+│   └── nginx.conf
+└── app/
+    ├── Dockerfile
+    ├── package.json
+    ├── .dockerignore
+    └── src/
+        ├── index.js
+        ├── config/
+        │   └── database.js
+        ├── routes/
+        │   └── api.js
+        └── models/
+            └── User.js
+                </div>
+            </div>
+            
+            <div class="step">
+                <div class="step-title">📝 Создание docker-compose.yml</div>
+                <div class="step-description">Конфигурация всех сервисов</div>
+                
+                <pre># Создаем файл:
+nano docker-compose.yml</pre>
+                
+                <pre>version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: myapp_postgres
+    restart: always
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Node.js Application
+  app:
+    build:
+      context: ./app
+      dockerfile: Dockerfile
+    container_name: myapp_node
+    restart: always
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - app_network
+    ports:
+      - "3000:3000"
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: myapp_nginx
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    depends_on:
+      - app
+    networks:
+      - app_network
+
+  # Redis Cache (опционально)
+  redis:
+    image: redis:7-alpine
+    container_name: myapp_redis
+    restart: always
+    networks:
+      - app_network
+    volumes:
+      - redis_data:/data
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  app_network:
+    driver: bridge</pre>
+            </div>
+            
+            <div class="step">
+                <div class="step-title">🔐 Создание .env файла</div>
+                <div class="step-description">Хранение секретных данных</div>
+                
+                <pre># Создаем .env:
+nano .env</pre>
+                
+                <pre># Database
+DB_NAME=myapp_db
+DB_USER=myapp_user
+DB_PASSWORD=your_strong_password_here
+
+# Application
+JWT_SECRET=your_jwt_secret_key_here
+NODE_ENV=production
+
+# Domain (для SSL)
+DOMAIN=yourdomain.com</pre>
+                
+                <div class="warning">
+                    <strong>⚠️ БЕЗОПАСНОСТЬ:</strong><br>
+                    • Используйте сильные пароли<br>
+                    • Не коммитьте .env в Git<br>
+                    • Генерируйте JWT_SECRET: <code>openssl rand -base64 32</code>
+                </div>
+            </div>
+        </div>
+        
+        <!-- ФАЗА 5: СОЗДАНИЕ ПРИЛОЖЕНИЯ -->
+        <div class="phase">
+            <div class="phase-title">
+                <div class="phase-number">5</div>
+                СОЗДАНИЕ NODE.JS ПРИЛОЖЕНИЯ
+            </div>
+            
+            <div class="step">
+                <div class="step-title">🐳 Dockerfile для Node.js</div>
+                <div class="step-description">Создаем образ приложения</div>
+                
+                <pre># Создаем директорию и файл:
+mkdir -p app
+nano app/Dockerfile</pre>
+                
+                <pre>FROM node:18-alpine
+
+# Устанавливаем рабочую директорию
+WORKDIR /app
+
+# Копируем package файлы
+COPY package*.json ./
+
+# Устанавливаем зависимости
+RUN npm ci --only=production
+
+# Копируем исходный код
+COPY . .
+
+# Открываем порт
+EXPOSE 3000
+
+# Запускаем приложение
+CMD ["node", "src/index.js"]</pre>
+            </div>
+            
+            <div class="step">
+                <div class="step-title">📦 package.json</div>
+                <div class="step-description">Зависимости проекта</div>
+                
+                <pre># Создаем файл:
+nano app/package.json</pre>
+                
+                <pre>{
+  "name": "myapp",
+  "version": "1.0.0",
+  "description": "My Node.js Application",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "pg": "^8.11.3",
+    "dotenv": "^16.3.1",
+    "cors": "^2.8.5",
+    "helmet": "^7.1.0",
+    "bcrypt": "^5.1.1",
+    "jsonwebtoken": "^9.0.2",
+    "express-validator": "^7.0.1",
+    "winston": "^3.11.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  }
+}</pre>
+            </div>
+            
+            <div class="step">
+                <div class="step-title">🚀 Основной файл приложения</div>
+                <div class="step-description">src/index.js - точка входа</div>
+                
+                <pre># Создаем директорию и файл:
+mkdir -p app/src
+nano app/src/index.js</pre>
+                
+                <pre>require('dotenv').config();
+const express = require('express');
+const cors = require('cors');
+const helmet = require('helmet');
+const { Pool } = require('pg');
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+// Middleware
+app.use(helmet());
+app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Database connection
+const pool = new Pool({
+  host: process.env.DB_HOST,
+  port: process.env.DB_PORT,
+  database: process.env.DB_NAME,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+});
+
+// Test database connection
+pool.query('SELECT NOW()', (err, res) => {
+  if (err) {
+    console.error('❌ Database connection error:', err);
+  } else {
+    console.log('✅ Database connected:', res.rows[0].now);
+  }
+});
+
+// Routes
+app.get('/', (req, res) => {
+  res.json({
+    message: 'Welcome to My API',
+    status: 'running',
+    timestamp: new Date().toISOString()
+  });
+});
+
+app.get('/health', async (req, res) => {
+  try {
+    await pool.query('SELECT 1');
+    res.json({ status: 'healthy', database: 'connected' });
+  } catch (error) {
+    res.status(500).json({ status: 'unhealthy', error: error.message });
+  }
+});
+
+// API Routes
+app.get('/api/users', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM users LIMIT 10');
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Error handling
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ error: 'Something went wrong!' });
+});
+
+// Start server
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 Server is running on port ${PORT}`);
+  console.log(`📝 Environment: ${process.env.NODE_ENV}`);
+});</pre>
+            </div>
+            
+            <div class="step">
+                <div class="step-title">🚫 .dockerignore</div>
+                <div class="step-description">Исключаем ненужные файлы из образа</div>
+                
+                <pre># Создаем файл:
+nano app/.dockerignore</pre>
+                
+                <pre>node_modules
+npm-debug.log
+.env
+.git
+.gitignore
+README.md
+.vscode
+.idea</pre>
+            </div>
+        </div>
+        
+        <!-- ФАЗА 6: НАСТРОЙКА NGINX -->
+        <div class="phase">
+            <div class="phase-title">
+                <div class="phase-number">6</div>
+                НАСТРОЙКА NGINX
+            </div>
+            
+            <div class="step">
+                <div class="step-title">⚙️ Конфигурация Nginx</div>
+                <div class="step-description">Настройка reverse proxy</div>
+                
+                <pre># Создаем директорию и файл:
+mkdir -p nginx
+nano nginx/nginx.conf</pre>
+                
+                <pre>events {
+    worker_connections 1024;
+}
+
+http {
+    upstream app_backend {
+        server app:3000;
+    }
+
+    # Rate limiting
+    limit_req_zone $binary_remote_addr zone=api_limit:10m rate=10r/s;
+
+    server {
+        listen 80;
+        server_name yourdomain.com www.yourdomain.com;
+        
+        # Для SSL сертификата (Certbot)
+        location /.well-known/acme-challenge/ {
+            root /var/www/certbot;
+        }
+
+        # Редирект на HTTPS (раскомментировать после получения SSL)
+        # return 301 https://$server_name$request_uri;
+
+        # Временно для HTTP
+        location / {
+            proxy_pass http://app_backend;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection 'upgrade';
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_cache_bypass $http_upgrade;
+            
+            # Таймауты
+            proxy_connect_timeout 60s;
+            proxy_send_timeout 60s;
+            proxy_read_timeout 60s;
+        }
+
+        # API rate limiting
+        location /api/ {
+            limit_req zone=api_limit burst=20 nodelay;
+            proxy_pass http://app_backend;
+            proxy_http_version 1.1;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+        }
+    }
+
+    # HTTPS server (раскомментировать после получения SSL)
+    # server {
+    #     listen 443 ssl http2;
+    #     server_name yourdomain.com www.yourdomain.com;
+    #
+    #     ssl_certificate /etc/letsencrypt/live/yourdomain.com/fullchain.pem;
+    #     ssl_certificate_key /etc/letsencrypt/live/yourdomain.com/privkey.pem;
+    #
+    #     ssl_protocols TLSv1.2 TLSv1.3;
+    #     ssl_ciphers HIGH:!aNULL:!MD5;
+    #     ssl_prefer_server_ciphers on;
+    #
+    #     location / {
+    #         proxy_pass http://app_backend;
+    #         proxy_http_version 1.1;
+    #         proxy_set_header Upgrade $http_upgrade;
+    #         proxy_set_header Connection 'upgrade';
+    #         proxy_set_header Host $host;
+    #         proxy_set_header X-Real-IP $remote_addr;
+    #         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    #         proxy_set_header X-Forwarded-Proto $scheme;
+    #         proxy_cache_bypass $http_upgrade;
+    #     }
+    # }
+}</pre>
+            </div>
+        </div>
+        
+        <!-- ФАЗА 7: ЗАПУСК -->
+        <div class="phase">
+            <div class="phase-title">
+                <div class="phase-number">7</div>
+                ЗАПУСК И ДЕПЛОЙ
+            </div>
+            
+            <div class="step">
+                <div class="step-title">🚀 Запуск приложения</div>
+                <div class="step-description">Сборка и запуск контейнеров</div>
+                
+                <pre># Находясь в /var/www/myapp:
+cd /var/www/myapp
+
+# Собираем образы:
+docker compose build
+
+# Запускаем контейнеры:
+docker compose up -d
+
+# Проверяем статус:
+docker compose ps
+
+# Смотрим логи:
+docker compose logs -f app</pre>
+                
+                <div class="success">
+                    <strong>✅ Проверьте работу:</strong><br>
+                    • <code>curl http://localhost:3000</code> - на сервере<br>
+                    • <code>curl http://ваш_ip</code> - с внешнего адреса<br>
+                    • Откройте в браузере: http://ваш_ip
+                </div>
+            </div>
+            
+            <div class="step">
+                <div class="step-title">🗄️ Инициализация базы данных</div>
+                <div class="step-description">Создание таблиц и начальных данных</div>
+                
+                <pre># Подключаемся к контейнеру PostgreSQL:
+docker compose exec postgres psql -U myapp_user -d myapp_db
+
+#
+ Я создал подробный пошаговый курс по развертыванию веб-приложений на VPS Beget с использованием Docker и Termius. Курс включает:
+📚 Что включено:
+Фаза 0: Подготовка
+
+Установка необходимого ПО
+Настройка VPS на Beget
+
+Фаза 1: Подключение
+
+Настройка Termius
+SSH-ключи для безопасного доступа
+
+Фаза 2: Настройка сервера
+
+Обновление системы
+Настройка файрвола
+Создание пользователя
+
+Фаза 3: Docker
+
+Установка Docker и Docker Compose
+Настройка автозапуска
+
+Фаза 4: Проект
+
+Правильная структура проекта
+docker-compose.yml
+Файл переменных окружения
+
+Фаза 5: Node.js приложение
+
+Dockerfile
+package.json
+Основной код приложения
+
+Фаза 6: Nginx
+
+Конфигурация reverse proxy
+Rate limiting
+
+Фаза 7: Запуск
+
+Деплой приложения
+Инициализация БД
+
+Хотите, чтобы я добавил следующие разделы?
+
+SSL сертификаты (Let's Encrypt)
+CI/CD с GitHub Actions
+Мониторинг и логирование
+Backup стратегии
+Примеры миграций БД Создаем таблицу пользователей:
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+# Вставляем начальные данные:
+INSERT INTO users (username, email, password) VALUES
+('admin', 'admin@example.com', 'hashed_password');
+# Выходим из psql:
+\q</pre>
+            </div>
+        </div>
+        
+        <!-- ФАЗА 8: ДОПОЛНИТЕЛЬНЫЕ НАСТРОЙКИ -->
+        <div class="phase">
+            <div class="phase-title">
+                <div class="phase-number">8</div>
+                ДОПОЛНИТЕЛЬНЫЕ НАСТРОЙКИ
+            </div>
+            
+            <div class="step">
+                <div class="step-title">🔒 Настройка SSL с Let's Encrypt</div>
+                <div class="step-description">Обеспечение безопасности соединения</div>
+                
+                <pre># Установка Certbot:    
+sudo apt install certbot python3-certbot-nginx
+
+# Запуск Certbot:
+sudo certbot --nginx -d your_domain.com
+
+# Автоматическое обновление:
+sudo crontab -e
+# Добавьте строку:
+0 12 * * * /usr/bin/certbot renew --quiet</pre>
+            </div>
+            
+            <div class="step">
+                <div class="step-title">🔄 Настройка CI/CD с GitHub Actions</div>
+                <div class="step-description">Автоматизация деплоя при пуше в репозиторий</div>
+                
+                <pre># В вашем GitHub репозитории создайте файл:        
+.github/workflows/deploy.yml</pre>
+
+                <pre>name: Deploy to VPS    
+on:
+    push:
+        branches:
+        - main          
+jobs:
+    deploy:     
+        runs-on: ubuntu-latest          
+        steps:
+        - name: Checkout code
+          uses: actions/checkout@v2          
+        - name: Set up SSH
+          uses: webfactory/ssh-agent@v0.5.4
+          with:
+            ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}          
+        - name: Deploy to VPS
+          run: |
+            ssh -o StrictHostKeyChecking=no root@your_vps_ip 'cd /var/www/myapp && git pull && docker compose build && docker compose up -d'</pre>
+            </div>
+        </div>  
+    </div>
+</body> 
+</html>
