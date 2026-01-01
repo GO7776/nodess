@@ -280,6 +280,83 @@
             }
         }
 
+        /* Modal styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            max-width: 400px;
+            width: 90%;
+        }
+
+        .modal-title {
+            margin: 0 0 20px 0;
+            color: #667eea;
+            font-size: 1.3em;
+        }
+
+        .modal-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            margin-bottom: 20px;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+
+        .modal-input:focus {
+            border-color: #667eea;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .modal-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .modal-btn-cancel {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .modal-btn-cancel:hover {
+            background: #e0e0e0;
+        }
+
+        .modal-btn-confirm {
+            background: #667eea;
+            color: white;
+        }
+
+        .modal-btn-confirm:hover {
+            background: #5568d3;
+        }
+
         /* Notification animations */
         @keyframes slideIn {
             from {
@@ -343,14 +420,14 @@
     </div>
 
     <script>
-        // Constants
-        const ONE_HOUR_MS = 3600000;
-        const FIFTY_MINUTES_MS = 3000000;
-        const TWO_HOURS_MS = 7200000;
-        const ONE_HUNDRED_MINUTES_MS = 6000000;
-        const SIXTEEN_MINUTES_MS = 1000000;
-        const EIGHT_MINUTES_MS = 500000;
-        const TWO_MINUTES_MS = 100000;
+        // Constants for time calculations (in milliseconds)
+        const ONE_HOUR_MS = 3600000; // 60 * 60 * 1000
+        const FIFTY_MINUTES_MS = 3000000; // 50 * 60 * 1000
+        const TWO_HOURS_MS = 7200000; // 120 * 60 * 1000
+        const ONE_HUNDRED_MINUTES_MS = 6000000; // 100 * 60 * 1000
+        const SIXTEEN_MINUTES_MS = 1000000; // ~16.67 minutes (keeping demo data timing)
+        const EIGHT_MINUTES_MS = 500000; // ~8.33 minutes (keeping demo data timing)
+        const TWO_MINUTES_MS = 100000; // ~1.67 minutes (keeping demo data timing)
 
         // Data structure for chats
         let chats = [];
@@ -370,44 +447,55 @@
 
         // Load chats from localStorage
         function loadChats() {
-            const savedChats = localStorage.getItem('chats');
-            if (savedChats) {
-                chats = JSON.parse(savedChats);
-            } else {
-                // Create some demo chats if none exist
-                chats = [
-                    {
-                        id: 1,
-                        name: 'Рабочий чат',
-                        messages: [
-                            { text: 'Привет! Как дела с проектом?', sender: 'received', time: new Date(Date.now() - ONE_HOUR_MS).toISOString() },
-                            { text: 'Отлично! Уже почти готово.', sender: 'sent', time: new Date(Date.now() - FIFTY_MINUTES_MS).toISOString() }
-                        ],
-                        lastUpdated: new Date(Date.now() - FIFTY_MINUTES_MS).toISOString()
-                    },
-                    {
-                        id: 2,
-                        name: 'Семья',
-                        messages: [
-                            { text: 'Не забудь купить продукты', sender: 'received', time: new Date(Date.now() - TWO_HOURS_MS).toISOString() },
-                            { text: 'Хорошо, куплю после работы', sender: 'sent', time: new Date(Date.now() - ONE_HUNDRED_MINUTES_MS).toISOString() }
-                        ],
-                        lastUpdated: new Date(Date.now() - ONE_HUNDRED_MINUTES_MS).toISOString()
-                    },
-                    {
-                        id: 3,
-                        name: 'Друзья',
-                        messages: [
-                            { text: 'Встречаемся в субботу?', sender: 'received', time: new Date(Date.now() - SIXTEEN_MINUTES_MS).toISOString() },
-                            { text: 'Конечно! В какое время?', sender: 'sent', time: new Date(Date.now() - EIGHT_MINUTES_MS).toISOString() },
-                            { text: 'Давай в 18:00', sender: 'received', time: new Date(Date.now() - TWO_MINUTES_MS).toISOString() }
-                        ],
-                        lastUpdated: new Date(Date.now() - TWO_MINUTES_MS).toISOString()
-                    }
-                ];
-                nextChatId = 4;
-                saveChats();
+            try {
+                const savedChats = localStorage.getItem('chats');
+                if (savedChats) {
+                    chats = JSON.parse(savedChats);
+                } else {
+                    // Create some demo chats if none exist
+                    createDemoChats();
+                }
+            } catch (error) {
+                console.error('Error loading chats from localStorage:', error);
+                // If there's an error, create demo chats
+                createDemoChats();
             }
+        }
+
+        // Create demo chats
+        function createDemoChats() {
+            chats = [
+                {
+                    id: 1,
+                    name: 'Рабочий чат',
+                    messages: [
+                        { text: 'Привет! Как дела с проектом?', sender: 'received', time: new Date(Date.now() - ONE_HOUR_MS).toISOString() },
+                        { text: 'Отлично! Уже почти готово.', sender: 'sent', time: new Date(Date.now() - FIFTY_MINUTES_MS).toISOString() }
+                    ],
+                    lastUpdated: new Date(Date.now() - FIFTY_MINUTES_MS).toISOString()
+                },
+                {
+                    id: 2,
+                    name: 'Семья',
+                    messages: [
+                        { text: 'Не забудь купить продукты', sender: 'received', time: new Date(Date.now() - TWO_HOURS_MS).toISOString() },
+                        { text: 'Хорошо, куплю после работы', sender: 'sent', time: new Date(Date.now() - ONE_HUNDRED_MINUTES_MS).toISOString() }
+                    ],
+                    lastUpdated: new Date(Date.now() - ONE_HUNDRED_MINUTES_MS).toISOString()
+                },
+                {
+                    id: 3,
+                    name: 'Друзья',
+                    messages: [
+                        { text: 'Встречаемся в субботу?', sender: 'received', time: new Date(Date.now() - SIXTEEN_MINUTES_MS).toISOString() },
+                        { text: 'Конечно! В какое время?', sender: 'sent', time: new Date(Date.now() - EIGHT_MINUTES_MS).toISOString() },
+                        { text: 'Давай в 18:00', sender: 'received', time: new Date(Date.now() - TWO_MINUTES_MS).toISOString() }
+                    ],
+                    lastUpdated: new Date(Date.now() - TWO_MINUTES_MS).toISOString()
+                }
+            ];
+            nextChatId = 4;
+            saveChats();
         }
 
         // Save chats to localStorage
@@ -549,13 +637,13 @@
         function createNewChat() {
             // Create a custom modal for better UX
             const modalHtml = `
-                <div id="chatModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 2000;">
-                    <div style="background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 40px rgba(0,0,0,0.3); max-width: 400px; width: 90%;">
-                        <h3 style="margin: 0 0 20px 0; color: #667eea;">Создать новый чат</h3>
-                        <input type="text" id="chatNameInput" placeholder="Введите название чата..." style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 1em; margin-bottom: 20px;" />
-                        <div style="display: flex; gap: 10px; justify-content: flex-end;">
-                            <button onclick="closeModal()" style="padding: 10px 20px; background: #f0f0f0; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">Отмена</button>
-                            <button onclick="confirmCreateChat()" style="padding: 10px 20px; background: #667eea; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">Создать</button>
+                <div id="chatModal" class="modal-overlay">
+                    <div class="modal-content">
+                        <h3 class="modal-title">Создать новый чат</h3>
+                        <input type="text" id="chatNameInput" class="modal-input" placeholder="Введите название чата..." />
+                        <div class="modal-buttons">
+                            <button onclick="closeModal()" class="modal-btn modal-btn-cancel">Отмена</button>
+                            <button onclick="confirmCreateChat()" class="modal-btn modal-btn-confirm">Создать</button>
                         </div>
                     </div>
                 </div>
