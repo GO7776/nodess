@@ -90,23 +90,42 @@ if ($quality === 'best') {
 
 // Безопасное имя файла для шаблона
 $timestamp = time();
+// Используем шаблон yt-dlp как в Python версии
 $template_name = "%(title)s_{$timestamp}.%(ext)s";
 $output_template = $DOWNLOAD_DIR . $template_name;
 
 // Также запоминаем для поиска скачанного файла
 $search_pattern = "*_{$timestamp}.*";
 
-// Строим команду yt-dlp (более надежная версия как в Python)
-$command = escapeshellcmd($YT_DLP_PATH) . ' ' .
-           '--format ' . escapeshellarg($format) . ' ' .
-           '--output ' . escapeshellarg($output_template) . ' ' .
-           '--merge-output-format mp4 ' .
-           '--no-playlist ' .
-           '--no-warnings ' .
-           '--newline ' .
-           '--no-check-certificate ' .
-           '--ignore-errors ' .
-           escapeshellarg($url) . ' 2>&1';
+// Строим команду yt-dlp (как в Python - без двойного экранирования)
+// Важно: НЕ используем escapeshellcmd для всей команды, только для аргументов
+if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+    // Windows - используем двойные кавычки для путей с пробелами
+    $output_arg = '"' . addslashes($output_template) . '"';
+    $command = '"' . $YT_DLP_PATH . '"' . ' ' .
+               '--format ' . escapeshellarg($format) . ' ' .
+               '--output ' . $output_arg . ' ' .
+               '--merge-output-format mp4 ' .
+               '--no-playlist ' .
+               '--no-warnings ' .
+               '--newline ' .
+               '--no-check-certificate ' .
+               '--ignore-errors ' .
+               '--windows-filenames ' .
+               escapeshellarg($url) . ' 2>&1';
+} else {
+    // Linux/Mac
+    $command = $YT_DLP_PATH . ' ' .
+               '--format ' . escapeshellarg($format) . ' ' .
+               '--output ' . escapeshellarg($output_template) . ' ' .
+               '--merge-output-format mp4 ' .
+               '--no-playlist ' .
+               '--no-warnings ' .
+               '--newline ' .
+               '--no-check-certificate ' .
+               '--ignore-errors ' .
+               escapeshellarg($url) . ' 2>&1';
+}
 
 // Выполняем команду
 exec($command, $output, $return_code);
