@@ -329,6 +329,11 @@
 
         <form id="downloadForm">
             <div class="form-group">
+                <label for="downloadPath">📁 Путь для загрузки (оставьте пустым для загрузки в папку по умолчанию)</label>
+                <input type="text" id="downloadPath" placeholder="Например: C:\Downloads или оставьте пустым">
+            </div>
+
+            <div class="form-group">
                 <label for="videoUrl">URL видео</label>
                 <textarea id="videoUrl" placeholder="Вставьте ссылку на видео (например: https://www.youtube.com/watch?v=...)"></textarea>
                 <div class="button-group">
@@ -462,23 +467,31 @@
             progressFill.textContent = 'Загрузка...';
             hideStatus();
 
+            // Получаем путь загрузки
+            const downloadPath = document.getElementById('downloadPath').value.trim();
+
             // Отправляем запрос на сервер
-            downloadVideo(url, quality);
+            downloadVideo(url, quality, downloadPath);
         });
 
-        function downloadVideo(url, quality) {
+        function downloadVideo(url, quality, downloadPath) {
             const downloadBtn = document.getElementById('downloadBtn');
             const progressContainer = document.getElementById('progressContainer');
             const progressFill = document.getElementById('progressFill');
             
             showStatus('Загрузка видео с сервера...', 'info');
             
+            const requestData = { url: url, quality: quality };
+            if (downloadPath) {
+                requestData.downloadPath = downloadPath;
+            }
+            
             fetch('download.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ url: url, quality: quality })
+                body: JSON.stringify(requestData)
             })
             .then(response => response.json())
             .then(data => {
@@ -497,10 +510,21 @@
                     link.click();
                     document.body.removeChild(link);
                     
-                    // Через 3 секунды очищаем форму
-                    setTimeout(() => {
-                        showStatus('✓ Готово! Файл сохранен: ' + data.filename, 'success');
-                    }, 1000);
+                    // Открываем папку с файлом (только для локальных путей)
+                    if (data.download_dir && data.full_path) {
+                        // Показываем сообщение с кнопкой для открытия папки
+                        setTimeout(() => {
+                            showStatus(
+                                '✓ Готово! Файл сохранен: ' + data.filename + 
+                                '<br><button onclick="openFolder(\'' + data.download_dir.replace(/\\/g, '\\\\') + '\')" class="btn btn-secondary" style="margin-top:10px">📂 Открыть папку</button>',
+                                'success'
+                            );
+                        }, 1000);
+                    } else {
+                        setTimeout(() => {
+                            showStatus('✓ Готово! Файл сохранен: ' + data.filename, 'success');
+                        }, 1000);
+                    }
                 } else {
                     showStatus('✗ Ошибка: ' + data.error, 'error');
                 }
@@ -510,6 +534,32 @@
                 downloadBtn.textContent = 'Скачать видео';
                 progressContainer.style.display = 'none';
                 showStatus('✗ Ошибка загрузки: ' + error.message, 'error');
+            });
+        }
+
+        // Функция для открытия папки в проводнике Windows
+        function openFolder(path) {
+            fetch('open_folder.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ path: path })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (!data.success) {
+                    alert('Не удалось открыть папку: ' + (data.error || 'Неизвестная ошибка'));
+                }
+            })
+            .catch(error => {
+                // Fallback - пытаемся открыть через file:/// протокол
+                const link = document.createElement('a');
+                link.href = 'file:///' + path.replace(/\\/g, '/');
+                link.target = '_blank';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
             });
         }
 

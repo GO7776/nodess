@@ -13,8 +13,15 @@ if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
     $YT_DLP_PATH = '/usr/local/bin/yt-dlp'; // или 'yt-dlp' если в PATH
 }
 
-// Папка для загрузок
-$DOWNLOAD_DIR = __DIR__ . '/downloads/';
+// Получаем данные из POST запроса (перемещено выше для доступа к downloadPath)
+$data = json_decode(file_get_contents('php://input'), true);
+
+// Папка для загрузок - можно настроить из запроса
+if (isset($data['downloadPath']) && !empty($data['downloadPath'])) {
+    $DOWNLOAD_DIR = rtrim($data['downloadPath'], '/\\') . DIRECTORY_SEPARATOR;
+} else {
+    $DOWNLOAD_DIR = __DIR__ . '/downloads/';
+}
 
 // Создаем папку если не существует
 if (!file_exists($DOWNLOAD_DIR)) {
@@ -34,9 +41,7 @@ function sanitizeFilename($filename) {
     return $clean;
 }
 
-// Получаем данные из POST запроса
-$data = json_decode(file_get_contents('php://input'), true);
-
+// Проверяем наличие URL
 if (!isset($data['url']) || empty($data['url'])) {
     echo json_encode([
         'success' => false,
@@ -88,6 +93,9 @@ $timestamp = time();
 $template_name = "%(title)s_{$timestamp}.%(ext)s";
 $output_template = $DOWNLOAD_DIR . $template_name;
 
+// Также запоминаем для поиска скачанного файла
+$search_pattern = "*_{$timestamp}.*";
+
 // Строим команду yt-dlp (более надежная версия как в Python)
 $command = escapeshellcmd($YT_DLP_PATH) . ' ' .
            '--format ' . escapeshellarg($format) . ' ' .
@@ -100,22 +108,19 @@ $command = escapeshellcmd($YT_DLP_PATH) . ' ' .
            '--ignore-errors ' .
            escapeshellarg($url) . ' 2>&1';
 
-// Запоминаем файлы до загрузки
-$files_before = glob($DOWNLOAD_DIR . '*');
-
 // Выполняем команду
 exec($command, $output, $return_code);
 
 // Проверяем результат
 if ($return_code === 0) {
-    // Находим новые файлы после загрузки
-    $files_after = glob($DOWNLOAD_DIR . '*');
-    $new_files = array_diff($files_after, $files_before);
+    // Находим файл по паттерну с timestamp
+    $downloaded_files = glob($DOWNLOAD_DIR . $search_pattern);
     
-    if (count($new_files) > 0) {
-        // Берем первый новый файл
-        $downloaded_file = reset($new_files);
+    if (count($downloaded_files) > 0) {
+        // Берем первый файл (должен быть только один с этим timestamp)
+        $downloaded_file = reset($downloaded_files);
         $public_filename = basename($downloaded_file);
+        $full_path = realpath($downloaded_file);
         
         // Проверяем размер файла
         $filesize = filesize($downloaded_file);
@@ -126,7 +131,9 @@ if ($return_code === 0) {
             'message' => 'Видео успешно загружено',
             'download_url' => 'downloads/' . $public_filename,
             'filename' => $public_filename,
-            'filesize' => $filesize_mb . ' MB'
+            'filesize' => $filesize_mb . ' MB',
+            'full_path' => $full_path,
+            'download_dir' => realpath($DOWNLOAD_DIR)
         ]);
     } else {
         echo json_encode([
