@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -9,14 +10,14 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 20px;
-            background: linear-gradient(135deg, #248f59 0%, #1cd176 100%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             line-height: 1.6;
         }
         
         .container {
             max-width: 1200px;
             margin: 0 auto;
-            background: rgb(7, 194, 153);
+            background: rgb(61, 64, 218);
             border-radius: 15px;
             padding: 40px;
             box-shadow: 0 20px 60px rgba(0,0,0,0.3);
@@ -69,7 +70,7 @@
             border-radius: 10px;
             padding: 20px;
             margin-bottom: 15px;
-            border-left: 4px solid #03ff57;
+            border-left: 4px solid #764ba2;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
         
@@ -144,7 +145,7 @@
         
         .tag {
             display: inline-block;
-            background: #1b9204;
+            background: #667eea;
             color: white;
             padding: 5px 12px;
             border-radius: 20px;
@@ -3506,6 +3507,308 @@ networks:
                 </div>
             </div>
         </div>
+        <div class="phase">
+    <div class="phase-title">
+        <div class="phase-number">3.5</div>
+        УСТАНОВКА И НАСТРОЙКА POSTGRESQL НА VPS
+    </div>
+    
+    <div class="step">
+        <div class="step-title">🐘 Установка PostgreSQL напрямую на VPS</div>
+        <div class="step-description">Альтернативный способ - установка PostgreSQL без Docker</div>
+        
+        <div class="info">
+            <strong>📌 Когда выбирать этот способ:</strong><br>
+            • Нужен прямой доступ к СУБД<br>
+            • Высокие требования к производительности<br>
+            • Требуется ручная настройка и оптимизация<br>
+            • Предпочтение нативной установке
+        </div>
+        
+        <pre># Обновляем список пакетов:
+apt update
+
+# Устанавливаем PostgreSQL 15:
+apt install -y postgresql postgresql-contrib postgresql-client
+
+# Проверяем установку:
+psql --version
+
+# Проверяем статус службы:
+systemctl status postgresql
+
+# Включаем автозапуск:
+systemctl enable postgresql</pre>
+    </div>
+    
+    <div class="step">
+        <div class="step-title">🔧 Базовая настройка PostgreSQL</div>
+        <div class="step-description">Настройка безопасности и создание пользователей</div>
+        
+        <pre># Переключаемся на пользователя postgres:
+sudo -i -u postgres
+
+# Заходим в консоль PostgreSQL:
+psql
+
+# В консоли PostgreSQL выполняем:</pre>
+        
+        <pre>-- Создаем нового пользователя (замените 'your_password'):
+CREATE USER myapp_user WITH PASSWORD 'your_strong_password_here';
+
+-- Создаем базу данных:
+CREATE DATABASE myapp_db 
+    WITH 
+    OWNER = myapp_user
+    ENCODING = 'UTF8'
+    LC_COLLATE = 'en_US.UTF-8'
+    LC_CTYPE = 'en_US.UTF-8'
+    TEMPLATE = template0;
+
+-- Даем права пользователю:
+GRANT ALL PRIVILEGES ON DATABASE myapp_db TO myapp_user;
+
+-- Создаем расширения (если нужны):
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+
+-- Выходим из консоли:
+\q
+
+# Возвращаемся к своему пользователю:
+exit</pre>
+    </div>
+    
+    <div class="step">
+        <div class="step-title">🛡️ Настройка безопасности PostgreSQL</div>
+        <div class="step-description">Конфигурация аутентификации и доступа</div>
+        
+        <pre># Редактируем конфигурационный файл pg_hba.conf:
+nano /etc/postgresql/15/main/pg_hba.conf</pre>
+        
+        <pre># Ищем строки и меняем настройки:
+# Доступ только с локального хоста и по паролю
+local   all             all                                     md5
+host    all             all             127.0.0.1/32            md5
+
+# Для удаленного доступа (раскомментировать при необходимости):
+# host    all             all             ваш_ip/32               md5
+
+# Для доступа из Docker контейнеров:
+host    all             all             172.0.0.0/8             md5</pre>
+        
+        <pre># Редактируем основной конфигурационный файл:
+nano /etc/postgresql/15/main/postgresql.conf</pre>
+        
+        <pre># Настраиваем сетевые подключения:
+listen_addresses = 'localhost'          # или '*' для всех интерфейсов
+port = 5432
+
+# Настройки производительности (для сервера с 2GB RAM):
+shared_buffers = 512MB
+effective_cache_size = 1536MB
+maintenance_work_mem = 128MB
+checkpoint_completion_target = 0.9
+wal_buffers = 16MB
+default_statistics_target = 100</pre>
+    </div>
+    
+    <div class="step">
+        <div class="step-title">🌐 Настройка удаленного доступа (опционально)</div>
+        <div class="step-description">Разрешение подключения извне с безопасностью</div>
+        
+        <pre># 1. Редактируем postgresql.conf:
+nano /etc/postgresql/15/main/postgresql.conf
+
+# Меняем строку:
+listen_addresses = '*'  # Разрешаем слушать все интерфейсы</pre>
+        
+        <pre># 2. Настраиваем pg_hba.conf для удаленного доступа:
+nano /etc/postgresql/15/main/pg_hba.conf
+
+# Добавляем в конец (замените your_ip на ваш IP):
+host    myapp_db    myapp_user    ваш_ip/32    md5
+
+# Или для доступа с любого IP (НЕ рекомендуется для продакшена):
+# host    myapp_db    myapp_user    0.0.0.0/0    md5</pre>
+        
+        <pre># 3. Открываем порт в фаерволе:
+ufw allow from ваш_ip to any port 5432
+
+# 4. Перезапускаем PostgreSQL:
+systemctl restart postgresql
+
+# 5. Проверяем доступность:
+ss -tulpn | grep 5432</pre>
+    </div>
+    
+    <div class="step">
+        <div class="step-title">📊 Мониторинг и обслуживание PostgreSQL</div>
+        <div class="step-description">Полезные команды для администрирования</div>
+        
+        <pre># Основные команды обслуживания:
+
+# Проверка статуса:
+systemctl status postgresql
+
+# Перезапуск службы:
+systemctl restart postgresql
+
+# Проверка логов:
+tail -f /var/log/postgresql/postgresql-15-main.log
+
+# Подключение к базе:
+psql -h localhost -U myapp_user -d myapp_db
+
+# Резервное копирование:
+sudo -u postgres pg_dump myapp_db > backup_$(date +%Y%m%d).sql
+
+# Восстановление из бэкапа:
+sudo -u postgres psql myapp_db < backup_file.sql
+
+# Проверка активности соединений:
+sudo -u postgres psql -c "SELECT * FROM pg_stat_activity;"
+
+# Проверка размера баз данных:
+sudo -u postgres psql -c "SELECT datname, pg_size_pretty(pg_database_size(datname)) FROM pg_database;"</pre>
+    </div>
+    
+    <div class="step">
+        <div class="step-title">🔌 Интеграция с Node.js приложением</div>
+        <div class="step-description">Настройка подключения из Node.js к PostgreSQL</div>
+        
+        <pre># Обновляем .env файл:
+nano /var/www/myapp/.env</pre>
+        
+        <pre># Для Docker версии:
+DB_HOST=postgres
+DB_PORT=5432
+DB_NAME=myapp_db
+DB_USER=myapp_user
+DB_PASSWORD=your_strong_password_here
+
+# Для нативной установки на том же сервере:
+# DB_HOST=localhost
+# DB_PORT=5432
+# DB_NAME=myapp_db
+# DB_USER=myapp_user
+# DB_PASSWORD=your_strong_password_here</pre>
+        
+        <pre># Обновляем docker-compose.yml (если используем нативный PostgreSQL):
+nano docker-compose.yml</pre>
+        
+        <pre># Заменяем сервис postgres на внешний:
+services:
+  app:
+    # ... другие настройки
+    environment:
+      DB_HOST: host.docker.internal  # Для доступа к хосту из Docker
+      # или DB_HOST: ваш_ip  # для удаленного доступа</pre>
+        
+        <div class="warning">
+            <strong>⚠️ ВАЖНО для Docker:</strong><br>
+            Для доступа к PostgreSQL на хосте из Docker контейнера используйте:<br>
+            • <code>host.docker.internal</code> - для Linux (требуется Docker 20.10+)<br>
+            • <code>172.17.0.1</code> - дефолтный шлюз Docker<br>
+            Или добавьте в docker-compose.yml: <code>extra_hosts: ["host.docker.internal:host-gateway"]</code>
+        </div>
+    </div>
+    
+    <div class="step">
+        <div class="step-title">📈 Оптимизация PostgreSQL для продакшена</div>
+        <div class="step-description">Тюнинг производительности для VPS Beget</div>
+        
+        <pre># Создаем файл с настройками оптимизации:
+nano /etc/postgresql/15/main/conf.d/optimization.conf</pre>
+        
+        <pre># Оптимизация для VPS с 2GB RAM:
+# Память
+shared_buffers = 512MB
+effective_cache_size = 1536MB
+work_mem = 8MB
+maintenance_work_mem = 128MB
+
+# Настройки WAL
+wal_buffers = 16MB
+min_wal_size = 1GB
+max_wal_size = 4GB
+checkpoint_completion_target = 0.9
+
+# Параллельные запросы
+max_worker_processes = 2
+max_parallel_workers_per_gather = 1
+max_parallel_workers = 2
+
+# Таймауты
+idle_in_transaction_session_timeout = 10min
+statement_timeout = 30s
+lock_timeout = 5s
+
+# Логирование
+log_min_duration_statement = 200ms
+log_checkpoints = on
+log_connections = on
+log_disconnections = on</pre>
+        
+        <pre># Включаем настройки в основном конфиге:
+nano /etc/postgresql/15/main/postgresql.conf
+
+# Добавляем в конец:
+include_dir = 'conf.d'
+
+# Перезапускаем PostgreSQL:
+systemctl restart postgresql</pre>
+    </div>
+    
+    <div class="step">
+        <div class="step-title">🔄 Автоматические бэкапы PostgreSQL</div>
+        <div class="step-description">Настройка регулярного резервного копирования</div>
+        
+        <pre># Создаем скрипт для бэкапа:
+nano /usr/local/bin/pg_backup.sh</pre>
+        
+        <pre>#!/bin/bash
+
+# Настройки
+BACKUP_DIR="/var/backups/postgresql"
+DATE=$(date +%Y%m%d_%H%M%S)
+DB_NAME="myapp_db"
+RETENTION_DAYS=7
+
+# Создаем директорию для бэкапов
+mkdir -p $BACKUP_DIR
+
+# Выполняем бэкап
+sudo -u postgres pg_dump -Fc $DB_NAME > $BACKUP_DIR/${DB_NAME}_${DATE}.dump
+
+# Архивируем бэкап
+gzip $BACKUP_DIR/${DB_NAME}_${DATE}.dump
+
+# Удаляем старые бэкапы
+find $BACKUP_DIR -name "*.gz" -mtime +$RETENTION_DAYS -delete
+
+# Логируем результат
+echo "$(date): Backup completed for $DB_NAME" >> /var/log/postgresql_backup.log</pre>
+        
+        <pre># Даем права на выполнение:
+chmod +x /usr/local/bin/pg_backup.sh
+
+# Добавляем в cron (ежедневно в 2:00):
+crontab -e
+
+# Добавляем строку:
+0 2 * * * /usr/local/bin/pg_backup.sh</pre>
+        
+        <div class="success">
+            <strong>✅ PostgreSQL настроен и готов к работе!</strong><br>
+            Теперь у вас есть:<br>
+            1. Установленный и настроенный PostgreSQL<br>
+            2. Оптимизированные настройки для VPS<br>
+            3. Автоматические бэкапы<br>
+            4. Интеграция с Node.js приложением
+        </div>
+    </div>
+</div>
     </div>
 </div>
 
