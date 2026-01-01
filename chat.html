@@ -279,6 +279,29 @@
                 display: none;
             }
         }
+
+        /* Notification animations */
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
     </style>
 </head>
 <body>
@@ -320,9 +343,19 @@
     </div>
 
     <script>
+        // Constants
+        const ONE_HOUR_MS = 3600000;
+        const FIFTY_MINUTES_MS = 3000000;
+        const TWO_HOURS_MS = 7200000;
+        const ONE_HUNDRED_MINUTES_MS = 6000000;
+        const SIXTEEN_MINUTES_MS = 1000000;
+        const EIGHT_MINUTES_MS = 500000;
+        const TWO_MINUTES_MS = 100000;
+
         // Data structure for chats
         let chats = [];
         let currentChatId = null;
+        let nextChatId = 1;
 
         // Initialize the app
         function init() {
@@ -347,31 +380,32 @@
                         id: 1,
                         name: 'Рабочий чат',
                         messages: [
-                            { text: 'Привет! Как дела с проектом?', sender: 'received', time: new Date(Date.now() - 3600000).toISOString() },
-                            { text: 'Отлично! Уже почти готово.', sender: 'sent', time: new Date(Date.now() - 3000000).toISOString() }
+                            { text: 'Привет! Как дела с проектом?', sender: 'received', time: new Date(Date.now() - ONE_HOUR_MS).toISOString() },
+                            { text: 'Отлично! Уже почти готово.', sender: 'sent', time: new Date(Date.now() - FIFTY_MINUTES_MS).toISOString() }
                         ],
-                        lastUpdated: new Date(Date.now() - 3000000).toISOString()
+                        lastUpdated: new Date(Date.now() - FIFTY_MINUTES_MS).toISOString()
                     },
                     {
                         id: 2,
                         name: 'Семья',
                         messages: [
-                            { text: 'Не забудь купить продукты', sender: 'received', time: new Date(Date.now() - 7200000).toISOString() },
-                            { text: 'Хорошо, куплю после работы', sender: 'sent', time: new Date(Date.now() - 6000000).toISOString() }
+                            { text: 'Не забудь купить продукты', sender: 'received', time: new Date(Date.now() - TWO_HOURS_MS).toISOString() },
+                            { text: 'Хорошо, куплю после работы', sender: 'sent', time: new Date(Date.now() - ONE_HUNDRED_MINUTES_MS).toISOString() }
                         ],
-                        lastUpdated: new Date(Date.now() - 6000000).toISOString()
+                        lastUpdated: new Date(Date.now() - ONE_HUNDRED_MINUTES_MS).toISOString()
                     },
                     {
                         id: 3,
                         name: 'Друзья',
                         messages: [
-                            { text: 'Встречаемся в субботу?', sender: 'received', time: new Date(Date.now() - 1000000).toISOString() },
-                            { text: 'Конечно! В какое время?', sender: 'sent', time: new Date(Date.now() - 500000).toISOString() },
-                            { text: 'Давай в 18:00', sender: 'received', time: new Date(Date.now() - 100000).toISOString() }
+                            { text: 'Встречаемся в субботу?', sender: 'received', time: new Date(Date.now() - SIXTEEN_MINUTES_MS).toISOString() },
+                            { text: 'Конечно! В какое время?', sender: 'sent', time: new Date(Date.now() - EIGHT_MINUTES_MS).toISOString() },
+                            { text: 'Давай в 18:00', sender: 'received', time: new Date(Date.now() - TWO_MINUTES_MS).toISOString() }
                         ],
-                        lastUpdated: new Date(Date.now() - 100000).toISOString()
+                        lastUpdated: new Date(Date.now() - TWO_MINUTES_MS).toISOString()
                     }
                 ];
+                nextChatId = 4;
                 saveChats();
             }
         }
@@ -437,7 +471,7 @@
         // Open the last (most recent) chat
         function openLastChat() {
             if (chats.length === 0) {
-                alert('Нет доступных чатов. Создайте новый чат.');
+                showNotification('Нет доступных чатов. Создайте новый чат.');
                 return;
             }
 
@@ -513,12 +547,46 @@
 
         // Create new chat
         function createNewChat() {
-            const name = prompt('Введите название чата:');
-            if (!name || !name.trim()) return;
+            // Create a custom modal for better UX
+            const modalHtml = `
+                <div id="chatModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 2000;">
+                    <div style="background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 40px rgba(0,0,0,0.3); max-width: 400px; width: 90%;">
+                        <h3 style="margin: 0 0 20px 0; color: #667eea;">Создать новый чат</h3>
+                        <input type="text" id="chatNameInput" placeholder="Введите название чата..." style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 1em; margin-bottom: 20px;" />
+                        <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                            <button onclick="closeModal()" style="padding: 10px 20px; background: #f0f0f0; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">Отмена</button>
+                            <button onclick="confirmCreateChat()" style="padding: 10px 20px; background: #667eea; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">Создать</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+            document.getElementById('chatNameInput').focus();
+            
+            // Handle Enter key
+            document.getElementById('chatNameInput').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') confirmCreateChat();
+            });
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('chatModal');
+            if (modal) modal.remove();
+        }
+
+        function confirmCreateChat() {
+            const input = document.getElementById('chatNameInput');
+            const name = input.value.trim();
+            
+            if (!name) {
+                showNotification('Пожалуйста, введите название чата');
+                return;
+            }
 
             const newChat = {
-                id: Date.now(),
-                name: name.trim(),
+                id: nextChatId++,
+                name: name,
                 messages: [],
                 lastUpdated: new Date().toISOString()
             };
@@ -527,6 +595,7 @@
             saveChats();
             renderChatList();
             openChat(newChat.id);
+            closeModal();
         }
 
         // Format time
@@ -576,29 +645,5 @@
         // Initialize on page load
         window.onload = init;
     </script>
-
-    <style>
-        @keyframes slideIn {
-            from {
-                transform: translateX(100%);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
-        }
-
-        @keyframes slideOut {
-            from {
-                transform: translateX(0);
-                opacity: 1;
-            }
-            to {
-                transform: translateX(100%);
-                opacity: 0;
-            }
-        }
-    </style>
 </body>
 </html>
