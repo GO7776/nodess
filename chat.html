@@ -337,7 +337,7 @@
                 if (!chatName) return;
 
                 const newChat = {
-                    id: Date.now(),
+                    id: Date.now() + Math.random(),
                     name: chatName,
                     messages: [],
                     lastMessageTime: new Date().toISOString()
@@ -351,7 +351,7 @@
 
             openLastChat() {
                 if (this.chats.length === 0) {
-                    alert('Нет доступных чатов. Создайте новый чат!');
+                    this.showNotification('Нет доступных чатов. Создайте новый чат!');
                     return;
                 }
 
