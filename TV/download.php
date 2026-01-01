@@ -4,8 +4,14 @@ header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: POST');
 header('Access-Control-Allow-Headers: Content-Type');
 
-// Путь к yt-dlp (измените на свой)
-$YT_DLP_PATH = '/usr/local/bin/yt-dlp'; // или 'yt-dlp' если в PATH
+// Определяем путь к yt-dlp в зависимости от ОС
+if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+    // Windows - ищем в PATH или используем полный путь
+    $YT_DLP_PATH = 'yt-dlp'; // или 'C:\\Python\\Scripts\\yt-dlp.exe'
+} else {
+    // Linux/Mac
+    $YT_DLP_PATH = '/usr/local/bin/yt-dlp'; // или 'yt-dlp' если в PATH
+}
 
 // Папка для загрузок
 $DOWNLOAD_DIR = __DIR__ . '/downloads/';
@@ -13,6 +19,19 @@ $DOWNLOAD_DIR = __DIR__ . '/downloads/';
 // Создаем папку если не существует
 if (!file_exists($DOWNLOAD_DIR)) {
     mkdir($DOWNLOAD_DIR, 0755, true);
+}
+
+// Функция очистки имени файла (как в Python)
+function sanitizeFilename($filename) {
+    // Запрещенные символы в Windows: \ / : * ? " < > |
+    $clean = preg_replace('/[<>:"\/\\|?*]/', '_', $filename);
+    // Убираем точки в конце
+    $clean = rtrim($clean, '.');
+    // Ограничиваем длину
+    if (mb_strlen($clean) > 200) {
+        $clean = mb_substr($clean, 0, 200);
+    }
+    return $clean;
 }
 
 // Получаем данные из POST запроса
@@ -55,68 +74,93 @@ if ($source['supported'] === false) {
     exit;
 }
 
-// Формируем формат для загрузки
+// Формируем формат для загрузки (как в Python-версии)
 if ($quality === 'best') {
-    $format = 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best';
+    // Лучшее качество - берем best в mp4 или просто best
+    $format = 'best[ext=mp4]/best';
 } else {
-    $format = "bestvideo[height<={$quality}][ext=mp4]+bestaudio[ext=m4a]/best[height<={$quality}][ext=mp4]/best";
+    // Конкретное качество с fallback
+    $format = "best[height<={$quality}][ext=mp4]/best[height<={$quality}]/best";
 }
 
-// Генерируем уникальное имя файла
-$filename = uniqid('video_') . '.mp4';
-$output_path = $DOWNLOAD_DIR . $filename;
-$output_template = $DOWNLOAD_DIR . '%(title)s_' . uniqid() . '.%(ext)s';
+// Безопасное имя файла для шаблона
+$timestamp = time();
+$template_name = "%(title)s_{$timestamp}.%(ext)s";
+$output_template = $DOWNLOAD_DIR . $template_name;
 
-// Команда для yt-dlp
+// Строим команду yt-dlp (более надежная версия как в Python)
 $command = escapeshellcmd($YT_DLP_PATH) . ' ' .
            '--format ' . escapeshellarg($format) . ' ' .
            '--output ' . escapeshellarg($output_template) . ' ' .
            '--merge-output-format mp4 ' .
            '--no-playlist ' .
            '--no-warnings ' .
-           '--quiet ' .
+           '--newline ' .
+           '--no-check-certificate ' .
+           '--ignore-errors ' .
            escapeshellarg($url) . ' 2>&1';
+
+// Запоминаем файлы до загрузки
+$files_before = glob($DOWNLOAD_DIR . '*');
 
 // Выполняем команду
 exec($command, $output, $return_code);
 
 // Проверяем результат
 if ($return_code === 0) {
-    // Ищем загруженный файл
-    $files = glob($DOWNLOAD_DIR . '*');
-    if (count($files) > 0) {
-        // Берем последний загруженный файл
-        $downloaded_file = array_pop($files);
+    // Находим новые файлы после загрузки
+    $files_after = glob($DOWNLOAD_DIR . '*');
+    $new_files = array_diff($files_after, $files_before);
+    
+    if (count($new_files) > 0) {
+        // Берем первый новый файл
+        $downloaded_file = reset($new_files);
         $public_filename = basename($downloaded_file);
+        
+        // Проверяем размер файла
+        $filesize = filesize($downloaded_file);
+        $filesize_mb = round($filesize / 1024 / 1024, 2);
         
         echo json_encode([
             'success' => true,
             'message' => 'Видео успешно загружено',
             'download_url' => 'downloads/' . $public_filename,
-            'filename' => $public_filename
+            'filename' => $public_filename,
+            'filesize' => $filesize_mb . ' MB'
         ]);
     } else {
         echo json_encode([
             'success' => false,
-            'error' => 'Файл не найден после загрузки'
+            'error' => 'Файл не найден после загрузки. Возможно, видео недоступно.',
+            'debug_output' => implode("\n", $output)
         ]);
     }
 } else {
+    // Обработка ошибок (как в Python-версии)
     $error_message = implode("\n", $output);
     
-    // Специальное сообщение для частых ошибок
-    if (strpos($error_message, 'YandexVideo') !== false) {
-        $error_message = 'Яндекс.Видео не поддерживается. Используйте прямую ссылку с оригинального источника.';
-    } elseif (strpos($error_message, 'Video unavailable') !== false) {
+    // Специальные сообщения для частых ошибок
+    if (stripos($error_message, 'YandexVideo') !== false || 
+        stripos($error_message, 'yandex') !== false) {
+        $error_message = 'Яндекс.Видео не поддерживается. Используйте прямую ссылку с YouTube/Rutube/VK.';
+    } elseif (stripos($error_message, 'Video unavailable') !== false) {
         $error_message = 'Видео недоступно или удалено';
-    } elseif (strpos($error_message, 'Private video') !== false) {
-        $error_message = 'Это приватное видео, скачать нельзя';
+    } elseif (stripos($error_message, 'Private video') !== false || 
+              stripos($error_message, 'members-only') !== false) {
+        $error_message = 'Это приватное видео или доступно только для подписчиков';
+    } elseif (stripos($error_message, 'HTTP Error 403') !== false) {
+        $error_message = 'Доступ запрещен. Попробуйте обновить yt-dlp: pip install -U yt-dlp';
+    } elseif (stripos($error_message, 'HTTP Error 429') !== false) {
+        $error_message = 'Превышен лимит запросов. Подождите несколько минут';
+    } elseif (empty($error_message)) {
+        $error_message = 'Неизвестная ошибка. Проверьте правильность ссылки';
     }
     
     echo json_encode([
         'success' => false,
-        'error' => 'Ошибка загрузки: ' . $error_message,
-        'command_output' => $output
+        'error' => $error_message,
+        'debug_output' => $output,
+        'return_code' => $return_code
     ]);
 }
 

@@ -454,68 +454,63 @@
 
             // Блокируем кнопку
             downloadBtn.disabled = true;
-            downloadBtn.innerHTML = '<span class="loading-text"><span class="spinner"></span>Загрузка...</span>';
+            downloadBtn.innerHTML = '<span class="loading-text"><span class="spinner"></span>Загрузка с сервера...</span>';
             
             // Показываем прогресс
             progressContainer.style.display = 'block';
+            progressFill.style.width = '50%';
+            progressFill.textContent = 'Загрузка...';
             hideStatus();
 
-            // Симуляция загрузки (в реальности это будет запрос к серверу)
-            let progress = 0;
-            const interval = setInterval(() => {
-                progress += Math.random() * 15;
-                if (progress > 100) progress = 100;
-                
-                progressFill.style.width = progress + '%';
-                progressFill.textContent = Math.round(progress) + '%';
-                
-                if (progress >= 100) {
-                    clearInterval(interval);
-                    
-                    // Здесь должен быть реальный запрос к PHP серверу
-                    downloadVideo(url, quality);
-                }
-            }, 500);
+            // Отправляем запрос на сервер
+            downloadVideo(url, quality);
         });
 
         function downloadVideo(url, quality) {
-            // В реальном приложении здесь будет AJAX запрос к download.php
-            // Для демонстрации показываем успешное завершение
+            const downloadBtn = document.getElementById('downloadBtn');
+            const progressContainer = document.getElementById('progressContainer');
+            const progressFill = document.getElementById('progressFill');
             
-            setTimeout(() => {
-                const downloadBtn = document.getElementById('downloadBtn');
-                const progressContainer = document.getElementById('progressContainer');
-                
+            showStatus('Загрузка видео с сервера...', 'info');
+            
+            fetch('download.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ url: url, quality: quality })
+            })
+            .then(response => response.json())
+            .then(data => {
                 downloadBtn.disabled = false;
                 downloadBtn.textContent = 'Скачать видео';
                 progressContainer.style.display = 'none';
                 
-                showStatus('✓ Видео успешно загружено! Проверьте папку загрузок.', 'success');
-                
-                // Для реального использования:
-                /*
-                fetch('download.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ url: url, quality: quality })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        showStatus('✓ Видео успешно загружено!', 'success');
-                        // Скачивание файла
-                        window.location.href = data.download_url;
-                    } else {
-                        showStatus('✗ Ошибка: ' + data.error, 'error');
-                    }
-                })
-                .catch(error => {
-                    showStatus('✗ Ошибка загрузки: ' + error.message, 'error');
-                });
-                */
-            }, 1000);
+                if (data.success) {
+                    showStatus('✓ Видео успешно загружено! Начинается скачивание...', 'success');
+                    
+                    // Создаем ссылку для скачивания
+                    const link = document.createElement('a');
+                    link.href = data.download_url;
+                    link.download = data.filename;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    
+                    // Через 3 секунды очищаем форму
+                    setTimeout(() => {
+                        showStatus('✓ Готово! Файл сохранен: ' + data.filename, 'success');
+                    }, 1000);
+                } else {
+                    showStatus('✗ Ошибка: ' + data.error, 'error');
+                }
+            })
+            .catch(error => {
+                downloadBtn.disabled = false;
+                downloadBtn.textContent = 'Скачать видео';
+                progressContainer.style.display = 'none';
+                showStatus('✗ Ошибка загрузки: ' + error.message, 'error');
+            });
         }
 
         // Автоматическое определение источника при вставке
