@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Video Downloader</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 700px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        h1 {
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 32px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .warning-box {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 25px;
+            font-size: 13px;
+            color: #856404;
+        }
+
+        .warning-box strong {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 14px;
+            transition: all 0.3s;
+            font-family: inherit;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        input[type="text"]:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+            flex: 1;
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .quality-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .quality-option {
+            position: relative;
+        }
+
+        .quality-option input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+        }
+
+        .quality-option label {
+            display: block;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin: 0;
+        }
+
+        .quality-option input[type="radio"]:checked + label {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .quality-option label:hover {
+            border-color: #667eea;
+        }
+
+        .download-btn {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .download-btn:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .download-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .progress-container {
+            margin-top: 20px;
+            display: none;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: #f0f0f0;
+            border-radius: 15px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            width: 0%;
+            transition: width 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 12px;
+        }
+
+        .status {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: 600;
+            display: none;
+        }
+
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            display: block;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            display: block;
+        }
+
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            display: block;
+        }
+
+        .supported-platforms {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        .supported-platforms h3 {
+            font-size: 14px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .platform-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .badge.supported {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .badge.not-supported {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            display: inline-flex;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎬 Video Downloader</h1>
+        <p class="subtitle">Скачивайте видео с YouTube, Rutube, VK и других платформ</p>
+
+        <div class="warning-box">
+            <strong>⚠️ Важно о Яндекс.Видео:</strong>
+            Яндекс.Видео не поддерживается напрямую. Откройте видео, найдите оригинальный источник (YouTube/Rutube/VK) и скопируйте ссылку оттуда.
+        </div>
+
+        <div class="supported-platforms">
+            <h3>Поддерживаемые платформы</h3>
+            <div class="platform-badges">
+                <span class="badge supported">✓ YouTube</span>
+                <span class="badge supported">✓ Rutube</span>
+                <span class="badge supported">✓ VK Video</span>
+                <span class="badge supported">✓ Vimeo</span>
+                <span class="badge supported">✓ Dailymotion</span>
+                <span class="badge not-supported">✗ Яндекс.Видео</span>
+            </div>
+        </div>
+
+        <form id="downloadForm">
+            <div class="form-group">
+                <label for="videoUrl">URL видео</label>
+                <textarea id="videoUrl" placeholder="Вставьте ссылку на видео (например: https://www.youtube.com/watch?v=...)"></textarea>
+                <div class="button-group">
+                    <button type="button" class="btn btn-secondary" onclick="clearUrl()">Очистить</button>
+                    <button type="button" class="btn btn-secondary" onclick="checkUrl()">Проверить ссылку</button>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Качество видео</label>
+                <div class="quality-options">
+                    <div class="quality-option">
+                        <input type="radio" name="quality" id="best" value="best" checked>
+                        <label for="best">Лучшее</label>
+                    </div>
+                    <div class="quality-option">
+                        <input type="radio" name="quality" id="1080p" value="1080">
+                        <label for="1080p">1080p</label>
+                    </div>
+                    <div class="quality-option">
+                        <input type="radio" name="quality" id="720p" value="720">
+                        <label for="720p">720p</label>
+                    </div>
+                    <div class="quality-option">
+                        <input type="radio" name="quality" id="480p" value="480">
+                        <label for="480p">480p</label>
+                    </div>
+                    <div class="quality-option">
+                        <input type="radio" name="quality" id="360p" value="360">
+                        <label for="360p">360p</label>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="download-btn" id="downloadBtn">
+                Скачать видео
+            </button>
+        </form>
+
+        <div class="progress-container" id="progressContainer">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill">0%</div>
+            </div>
+        </div>
+
+        <div class="status" id="status"></div>
+    </div>
+
+    <script>
+        function detectVideoSource(url) {
+            if (url.includes('youtube.com') || url.includes('youtu.be')) {
+                return { name: 'YouTube', supported: true };
+            } else if (url.includes('rutube.ru')) {
+                return { name: 'Rutube', supported: true };
+            } else if (url.includes('vk.com')) {
+                return { name: 'VK Video', supported: true };
+            } else if (url.includes('vimeo.com')) {
+                return { name: 'Vimeo', supported: true };
+            } else if (url.includes('dailymotion.com')) {
+                return { name: 'Dailymotion', supported: true };
+            } else if (url.includes('yandex.ru/video')) {
+                return { name: 'Яндекс.Видео', supported: false };
+            } else {
+                return { name: 'Неизвестный', supported: null };
+            }
+        }
+
+        function clearUrl() {
+            document.getElementById('videoUrl').value = '';
+            document.getElementById('videoUrl').focus();
+            showStatus('Поле очищено', 'info');
+        }
+
+        function checkUrl() {
+            const url = document.getElementById('videoUrl').value.trim();
+            if (!url) {
+                showStatus('Введите URL видео', 'error');
+                return;
+            }
+
+            const source = detectVideoSource(url);
+            
+            if (source.supported === false) {
+                showStatus(`❌ ${source.name} не поддерживается! Найдите оригинальный источник (YouTube/Rutube/VK)`, 'error');
+            } else if (source.supported === true) {
+                showStatus(`✓ Источник: ${source.name} - поддерживается!`, 'success');
+            } else {
+                showStatus(`⚠️ Неизвестный источник. Попробуем загрузить...`, 'info');
+            }
+        }
+
+        function showStatus(message, type) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = 'status ' + type;
+        }
+
+        function hideStatus() {
+            const status = document.getElementById('status');
+            status.style.display = 'none';
+        }
+
+        document.getElementById('downloadForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const url = document.getElementById('videoUrl').value.trim();
+            if (!url) {
+                showStatus('Введите URL видео!', 'error');
+                return;
+            }
+
+            // Проверяем источник
+            const source = detectVideoSource(url);
+            if (source.supported === false) {
+                showStatus(`❌ ${source.name} не поддерживается! Используйте прямую ссылку с YouTube/Rutube/VK`, 'error');
+                return;
+            }
+
+            const quality = document.querySelector('input[name="quality"]:checked').value;
+            const downloadBtn = document.getElementById('downloadBtn');
+            const progressContainer = document.getElementById('progressContainer');
+            const progressFill = document.getElementById('progressFill');
+
+            // Блокируем кнопку
+            downloadBtn.disabled = true;
+            downloadBtn.innerHTML = '<span class="loading-text"><span class="spinner"></span>Загрузка...</span>';
+            
+            // Показываем прогресс
+            progressContainer.style.display = 'block';
+            hideStatus();
+
+            // Симуляция загрузки (в реальности это будет запрос к серверу)
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += Math.random() * 15;
+                if (progress > 100) progress = 100;
+                
+                progressFill.style.width = progress + '%';
+                progressFill.textContent = Math.round(progress) + '%';
+                
+                if (progress >= 100) {
+                    clearInterval(interval);
+                    
+                    // Здесь должен быть реальный запрос к PHP серверу
+                    downloadVideo(url, quality);
+                }
+            }, 500);
+        });
+
+        function downloadVideo(url, quality) {
+            // В реальном приложении здесь будет AJAX запрос к download.php
+            // Для демонстрации показываем успешное завершение
+            
+            setTimeout(() => {
+                const downloadBtn = document.getElementById('downloadBtn');
+                const progressContainer = document.getElementById('progressContainer');
+                
+                downloadBtn.disabled = false;
+                downloadBtn.textContent = 'Скачать видео';
+                progressContainer.style.display = 'none';
+                
+                showStatus('✓ Видео успешно загружено! Проверьте папку загрузок.', 'success');
+                
+                // Для реального использования:
+                /*
+                fetch('download.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ url: url, quality: quality })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showStatus('✓ Видео успешно загружено!', 'success');
+                        // Скачивание файла
+                        window.location.href = data.download_url;
+                    } else {
+                        showStatus('✗ Ошибка: ' + data.error, 'error');
+                    }
+                })
+                .catch(error => {
+                    showStatus('✗ Ошибка загрузки: ' + error.message, 'error');
+                });
+                */
+            }, 1000);
+        }
+
+        // Автоматическое определение источника при вставке
+        document.getElementById('videoUrl').addEventListener('input', function() {
+            const url = this.value.trim();
+            if (url.length > 10) {
+                const source = detectVideoSource(url);
+                if (source.supported === false) {
+                    showStatus(`⚠️ ${source.name} не поддерживается`, 'error');
+                }
+            }
+        });
+    </script>
+</body>
+</html>
