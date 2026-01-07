@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Погодные условия - График осадков</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2980, #26d0ce);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .container {
+            max-width: 900px;
+            width: 100%;
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            margin-top: 20px;
+        }
+        
+        .header {
+            background: linear-gradient(to right, #2c3e50, #4a6491);
+            color: white;
+            padding: 25px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            font-weight: 600;
+        }
+        
+        .date-info {
+            text-align: right;
+        }
+        
+        .current-date {
+            font-size: 20px;
+            margin-bottom: 5px;
+        }
+        
+        .temperature {
+            display: flex;
+            align-items: center;
+            font-size: 22px;
+        }
+        
+        .temperature i {
+            margin-right: 10px;
+            color: #ffcc00;
+        }
+        
+        .weather-card {
+            display: flex;
+            padding: 30px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .current-temp {
+            flex: 1;
+            padding-right: 30px;
+            border-right: 1px solid #e0e0e0;
+        }
+        
+        .temp-value {
+            font-size: 72px;
+            font-weight: 300;
+            color: #2c3e50;
+            line-height: 1;
+        }
+        
+        .temp-details {
+            margin-top: 15px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .temp-detail {
+            flex: 1;
+            min-width: 120px;
+        }
+        
+        .temp-detail .label {
+            font-size: 14px;
+            color: #7f8c8d;
+            margin-bottom: 5px;
+        }
+        
+        .temp-detail .value {
+            font-size: 22px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .feels-like {
+            color: #3498db;
+        }
+        
+        .min-temp {
+            color: #2ecc71;
+        }
+        
+        .max-temp {
+            color: #e74c3c;
+        }
+        
+        .precipitation-info {
+            flex: 1;
+            padding-left: 30px;
+        }
+        
+        .precipitation-info h3 {
+            font-size: 22px;
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+        
+        .precipitation-value {
+            font-size: 42px;
+            font-weight: 300;
+            color: #3498db;
+            margin-bottom: 10px;
+        }
+        
+        .precipitation-text {
+            font-size: 16px;
+            color: #7f8c8d;
+            margin-bottom: 25px;
+        }
+        
+        .graph-section {
+            padding: 30px;
+        }
+        
+        .graph-title {
+            font-size: 22px;
+            color: #2c3e50;
+            margin-bottom: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .graph-container {
+            height: 250px;
+            position: relative;
+            margin-bottom: 20px;
+        }
+        
+        .graph-lines {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        
+        .graph-line {
+            border-top: 1px dashed #ddd;
+            position: relative;
+        }
+        
+        .graph-line span {
+            position: absolute;
+            left: -40px;
+            top: -10px;
+            font-size: 14px;
+            color: #7f8c8d;
+            width: 35px;
+            text-align: right;
+        }
+        
+        .graph-bars {
+            position: absolute;
+            top: 0;
+            left: 50px;
+            width: calc(100% - 80px);
+            height: 100%;
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-around;
+            padding-bottom: 25px;
+        }
+        
+        .bar-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100%;
+            justify-content: flex-end;
+        }
+        
+        .bar {
+            width: 30px;
+            background: linear-gradient(to top, #3498db, #2ecc71);
+            border-radius: 4px 4px 0 0;
+            position: relative;
+            transition: height 0.5s ease;
+        }
+        
+        .bar-value {
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 14px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .bar-time {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #7f8c8d;
+        }
+        
+        .time-axis {
+            display: flex;
+            justify-content: space-around;
+            margin-left: 50px;
+            margin-right: 30px;
+            padding-top: 10px;
+            border-top: 1px solid #ddd;
+        }
+        
+        .file-upload-section {
+            padding: 20px 30px;
+            background-color: #f8f9fa;
+            border-top: 1px solid #e0e0e0;
+        }
+        
+        .upload-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .upload-btn {
+            background: linear-gradient(to right, #3498db, #2c3e50);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .upload-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .file-input {
+            display: none;
+        }
+        
+        .file-info {
+            font-size: 14px;
+            color: #7f8c8d;
+            text-align: center;
+            line-height: 1.5;
+        }
+        
+        .file-name {
+            font-weight: 600;
+            color: #3498db;
+        }
+        
+        .data-info {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 200px;
+            overflow-y: auto;
+            font-size: 14px;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: white;
+            margin-top: 20px;
+        }
+        
+        .footer a {
+            color: #ffcc00;
+            text-decoration: none;
+        }
+        
+        @media (max-width: 768px) {
+            .weather-card {
+                flex-direction: column;
+            }
+            
+            .current-temp {
+                padding-right: 0;
+                border-right: none;
+                border-bottom: 1px solid #e0e0e0;
+                padding-bottom: 25px;
+                margin-bottom: 25px;
+            }
+            
+            .precipitation-info {
+                padding-left: 0;
+            }
+            
+            .graph-title {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            
+            .temp-value {
+                font-size: 60px;
+            }
+            
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+            
+            .date-info {
+                text-align: left;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-cloud-sun"></i> Погодные условия</h1>
+            <div class="date-info">
+                <div class="current-date">Среда, 7 января 2026 г.</div>
+                <div class="temperature">
+                    <i class="fas fa-thermometer-half"></i>
+                    <span>-11°C</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="weather-card">
+            <div class="current-temp">
+                <div class="temp-value">-11°</div>
+                <div class="temp-details">
+                    <div class="temp-detail">
+                        <div class="label">Ощущается как</div>
+                        <div class="value feels-like">-11°</div>
+                    </div>
+                    <div class="temp-detail">
+                        <div class="label">Мин. температура</div>
+                        <div class="value min-temp">-11°</div>
+                    </div>
+                    <div class="temp-detail">
+                        <div class="label">Макс. температура</div>
+                        <div class="value max-temp">-8°</div>
+                    </div>
+                </div>
+            </div>
+            <div class="precipitation-info">
+                <h3>Вероятность осадков</h3>
+                <div class="precipitation-value">0%</div>
+                <div class="precipitation-text">Вероятность сегодня: 0%</div>
+                <div class="temp-detail">
+                    <div class="label">Фактическая температура</div>
+                    <div class="value">-11°</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="graph-section">
+            <div class="graph-title">
+                <h3>График вероятности осадков</h3>
+                <div id="data-source">Данные загружены из файла: <span class="file-name">1.txt</span></div>
+            </div>
+            
+            <div class="graph-container">
+                <div class="graph-lines">
+                    <div class="graph-line"><span>100%</span></div>
+                    <div class="graph-line"><span>80%</span></div>
+                    <div class="graph-line"><span>60%</span></div>
+                    <div class="graph-line"><span>40%</span></div>
+                    <div class="graph-line"><span>20%</span></div>
+                    <div class="graph-line"><span>0%</span></div>
+                </div>
+                <div class="graph-bars" id="graph-bars">
+                    <!-- График будет построен здесь с помощью JavaScript -->
+                </div>
+            </div>
+            <div class="time-axis" id="time-axis">
+                <!-- Временные метки будут добавлены с помощью JavaScript -->
+            </div>
+        </div>
+        
+        <div class="file-upload-section">
+            <div class="upload-container">
+                <button class="upload-btn" id="upload-trigger">
+                    <i class="fas fa-file-upload"></i> Загрузить данные из файла
+                </button>
+                <input type="file" id="file-input" class="file-input" accept=".txt">
+                <div class="file-info">
+                    Вы можете загрузить собственный файл с данными в формате TXT.<br>
+                    Каждая строка должна содержать время и вероятность осадков, разделенные пробелом.<br>
+                    Например: "00:00 10"
+                </div>
+            </div>
+            
+            <div class="data-info">
+                <strong>Содержимое файла 1.txt:</strong><br>
+                <div id="file-content">
+                    Загрузка данных...
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="footer">
+        <p>Погодный график &copy; 2026 | Данные обновляются автоматически</p>
+        <p>Для корректной работы разместите файл <strong>1.txt</strong> в той же папке, что и эта страница</p>
+    </div>
+
+    <script>
+        // Пример данных для графика (по умолчанию)
+        const defaultData = [
+            { time: "00:00", probability: 0 },
+            { time: "03:00", probability: 5 },
+            { time: "06:00", probability: 10 },
+            { time: "09:00", probability: 15 },
+            { time: "12:00", probability: 20 },
+            { time: "15:00", probability: 15 },
+            { time: "18:00", probability: 10 },
+            { time: "21:00", probability: 5 }
+        ];
+        
+        // Функция для загрузки файла 1.txt
+        async function loadWeatherData() {
+            const fileContentElement = document.getElementById('file-content');
+            const graphBars = document.getElementById('graph-bars');
+            const timeAxis = document.getElementById('time-axis');
+            
+            try {
+                // Пытаемся загрузить файл 1.txt
+                const response = await fetch('1.txt');
+                
+                if (!response.ok) {
+                    throw new Error('Файл 1.txt не найден. Используются данные по умолчанию.');
+                }
+                
+                const text = await response.text();
+                fileContentElement.textContent = text;
+                
+                // Парсим данные из файла
+                const data = parseWeatherData(text);
+                updateGraph(data);
+                updateTimeAxis(data);
+                
+                // Обновляем информацию о файле
+                document.querySelector('#data-source .file-name').textContent = '1.txt (загружен)';
+                
+            } catch (error) {
+                console.error('Ошибка загрузки файла:', error.message);
+                fileContentElement.textContent = `Ошибка: ${error.message}\n\nИспользуются данные по умолчанию:\n\n${defaultData.map(item => `${item.time} ${item.probability}%`).join('\n')}`;
+                
+                // Используем данные по умолчанию
+                updateGraph(defaultData);
+                updateTimeAxis(defaultData);
+                
+                // Обновляем информацию о файле
+                document.querySelector('#data-source .file-name').textContent = '1.txt (не найден, используются данные по умолчанию)';
+            }
+        }
+        
+        // Функция для парсинга данных из текстового файла
+        function parseWeatherData(text) {
+            const lines = text.trim().split('\n');
+            const data = [];
+            
+            lines.forEach(line => {
+                // Игнорируем пустые строки и комментарии
+                if (line.trim() === '' || line.startsWith('#')) return;
+                
+                const parts = line.trim().split(/\s+/);
+                if (parts.length >= 2) {
+                    const time = parts[0];
+                    const probability = parseInt(parts[1], 10);
+                    
+                    if (!isNaN(probability)) {
+                        data.push({ time, probability });
+                    }
+                }
+            });
+            
+            // Если данных нет, возвращаем данные по умолчанию
+            return data.length > 0 ? data : defaultData;
+        }
+        
+        // Функция для обновления графика
+        function updateGraph(data) {
+            const graphBars = document.getElementById('graph-bars');
+            graphBars.innerHTML = '';
+            
+            // Находим максимальную вероятность для масштабирования
+            const maxProbability = Math.max(...data.map(item => item.probability), 100);
+            
+            data.forEach(item => {
+                const barContainer = document.createElement('div');
+                barContainer.className = 'bar-container';
+                
+                // Вычисляем высоту столбца в процентах
+                const barHeight = (item.probability / maxProbability) * 100;
+                
+                const bar = document.createElement('div');
+                bar.className = 'bar';
+                bar.style.height = `${barHeight}%`;
+                
+                const barValue = document.createElement('div');
+                barValue.className = 'bar-value';
+                barValue.textContent = `${item.probability}%`;
+                
+                const barTime = document.createElement('div');
+                barTime.className = 'bar-time';
+                barTime.textContent = item.time;
+                
+                bar.appendChild(barValue);
+                barContainer.appendChild(bar);
+                barContainer.appendChild(barTime);
+                graphBars.appendChild(barContainer);
+            });
+        }
+        
+        // Функция для обновления временной оси
+        function updateTimeAxis(data) {
+            const timeAxis = document.getElementById('time-axis');
+            timeAxis.innerHTML = '';
+            
+            data.forEach(item => {
+                const timeLabel = document.createElement('div');
+                timeLabel.className = 'time-label';
+                timeLabel.textContent = item.time;
+                timeAxis.appendChild(timeLabel);
+            });
+        }
+        
+        // Обработчик для кнопки загрузки файла
+        document.getElementById('upload-trigger').addEventListener('click', function() {
+            document.getElementById('file-input').click();
+        });
+        
+        document.getElementById('file-input').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                const content = e.target.result;
+                document.getElementById('file-content').textContent = content;
+                
+                // Парсим и отображаем данные из файла
+                const data = parseWeatherData(content);
+                updateGraph(data);
+                updateTimeAxis(data);
+                
+                // Обновляем информацию о файле
+                document.querySelector('#data-source .file-name').textContent = `${file.name} (загружен пользователем)`;
+            };
+            
+            reader.readAsText(file);
+        });
+        
+        // Загружаем данные при загрузке страницы
+        document.addEventListener('DOMContentLoaded', loadWeatherData);
+    </script>
+</body>
+</html>
