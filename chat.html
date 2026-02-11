@@ -295,9 +295,9 @@
                 this.attachEventListeners();
                 this.renderChatList();
                 
-                // If there are chats, optionally open the last one on load
+                // Если есть чаты, пользователь может открыть последний через кнопку
                 if (this.chats.length > 0) {
-                    // Don't auto-open, let user click the button
+                    // Не открываем автоматически, пользователь нажмет кнопку
                     console.log('Есть чаты. Нажмите "Последний" чтобы открыть последний чат.');
                 }
             }
@@ -355,16 +355,16 @@
                     return;
                 }
 
-                // Sort chats by last message time (most recent first)
+                // Сортируем чаты по времени последнего сообщения (самые новые первыми)
                 const sortedChats = [...this.chats].sort((a, b) => 
                     new Date(b.lastMessageTime) - new Date(a.lastMessageTime)
                 );
 
-                // Open the most recent chat
+                // Открываем самый последний чат
                 const lastChat = sortedChats[0];
                 this.openChat(lastChat.id);
                 
-                // Show notification
+                // Показываем уведомление
                 this.showNotification(`Открыт последний чат: "${lastChat.name}"`);
             }
 
@@ -403,7 +403,7 @@
                 this.chatInput.style.display = 'flex';
 
                 this.renderMessages(chat.messages);
-                this.renderChatList(); // Re-render to update active state
+                this.renderChatList(); // Перерисовываем список для обновления активного состояния
             }
 
             renderMessages(messages) {
@@ -447,7 +447,7 @@
                 this.renderChatList();
                 this.messageInput.value = '';
 
-                // Simulate a response
+                // Имитируем ответ
                 setTimeout(() => {
                     const response = {
                         text: 'Спасибо за сообщение! Это автоматический ответ.',
@@ -465,7 +465,7 @@
             renderChatList() {
                 this.chatList.innerHTML = '';
                 
-                // Sort chats by last message time
+                // Сортируем чаты по времени последнего сообщения
                 const sortedChats = [...this.chats].sort((a, b) => 
                     new Date(b.lastMessageTime) - new Date(a.lastMessageTime)
                 );
@@ -509,7 +509,7 @@
             }
         }
 
-        // Add animations
+        // Добавляем анимации
         const style = document.createElement('style');
         style.textContent = `
             @keyframes slideIn {
@@ -536,7 +536,7 @@
         `;
         document.head.appendChild(style);
 
-        // Initialize the app
+        // Инициализируем приложение
         const app = new ChatApp();
     </script>
 </body>
